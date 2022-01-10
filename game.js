@@ -1,4 +1,7 @@
-kaboom()
+kaboom({
+    scale: 4,
+    background: [ 0, 0, 0 ],
+});
 focus()
 
 loadSprite("space-invader", "/sprites/space-invader.png");
@@ -19,7 +22,8 @@ addLevel(
     ['!^^^^^^^^^^     &',
     '!^^^^^^^^^^     &',
     '!^^^^^^^^^^     &',
-    '!               &',
+    '!^^^^^^^^^^     &',
+    '!^^^^^^^^^^     &',
     '!               &',
     '!               &',
     '!               &',
@@ -58,9 +62,41 @@ keyDown("left", () => {
     player.move(-MOVE_SPEED, 0)
 });
 
+function spawnBullet(p) {
+    add([
+        rect(3, 6), //creates rectangle
+        pos(p),  //player position
+        origin("center"),
+        color(255, 0, 0),
+        "bullet",
+        area()
+    ])
+};
+
+keyPress("space", () => {
+    spawnBullet(player.pos.add(0, -12))
+});
+
+const BULLET_SPEED = 400;
+
+action("bullet", (b) => {
+    b.move(0, -BULLET_SPEED)
+    if(b.pos.y < 0) {
+        destroy(b)
+    }
+});
+
+collides("bullet", "space-invader", (b,s) => {
+    shake(2)  //shakes the camera when bullet hits the space invader
+    destroy(b)
+    destroy(s)
+    score.value++
+    score.text = "Score: " + score.value
+})
+
 const score = add([
-    text("0"),
-    pos(50, 50),
+    text("Score: 0"),
+    pos(290, 10),
     layer("ui"), 
     scale(0.2), {
         value: 0
@@ -89,6 +125,14 @@ collides("space-invader", "left-wall", () => {
     })
 });
 
+scene("lose", () => {
+    add([
+        scale(0.2),
+        pos(100, 70),
+        text("Game Over, " + "Score: " + score.value)
+    ])
+})
+
 player.onCollide("space-invader", () => {
-    go("lose", { score: score.value })
+    go("lose")
 });
